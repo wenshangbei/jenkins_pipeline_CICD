@@ -1,0 +1,97 @@
+pipeline {
+  agent any
+  stages {
+  stage('Init') {
+		steps{
+			script{
+			
+				println "welcome to Nick learn"
+				println env.WORKSPACE
+				module_test = load env.WORKSPACE + "/groovy/jenkins-module.groovy"
+				sh 'mkdir workplace'
+			}
+		}
+	}
+	 stage('Git Source') {
+		steps{
+                script{
+                	dir("${env.WORKSPACE}/workplace"){  
+                	    git branch: 'env/dev', credentialsId: '11111',url: 'git@192.168.108.132:root/jenkins_slave_k8s.git'
+                	}
+
+                      
+                    
+              }
+                
+         }
+    
+	}
+	stage('Code push SIT') {
+			steps{
+					script{
+						dir("${env.WORKSPACE}/workplace"){ 
+							sh 'git fetch --tags'
+							sh 'git checkout ' + GIT_TAG
+							sh 'git push -f origin HEAD:env/sit'
+						}
+				  }
+					
+			 }	
+    
+		}
+
+
+    stage('K8s Deploy') {
+    agent {
+    node {
+      label 'haimaxy-jnlp'
+    }
+
+  }
+      steps {
+        script {
+          container('kubectl') {
+            sh "sed -e 's#{IMAGE_URL}#" + HARBOR_HOST + "/" + DOCKER_IMAGE + "#g;s#{IMAGE_TAG}#" + GIT_TAG + "#g;s#{APP_NAME}#" + APP_NAME + "#g;s#{SPRING_PROFILE}#k8s-test#g' k8s-deployment.tpl > k8s-deployment.yml"
+            try{
+                sh "kubectl delete rc " + APP_NAME + " --namespace=" + K8S_NAMESPACE
+            }catch (Exception e) {
+				println e
+			}
+
+            
+            sh "kubectl apply -f k8s-deployment.yml --namespace=" + K8S_NAMESPACE
+          }
+        }
+
+      }
+    }
+
+  }
+ post{
+		failure {
+			script {
+				module_test.send_email_results("Failed","Master","1006953115@qq.com")
+				deleteDir()
+			
+			}
+		}
+		success {
+			script {
+			
+				module_test.send_email_results("Success","Master","1006953115@qq.com")
+				deleteDir()
+			}
+		}
+	}
+
+ environment {
+        HARBOR_CREDS = credentials('jenkins-harbor-creds')
+
+    }
+  parameters {
+    string(name: 'HARBOR_HOST', defaultValue: '192.168.108.131', description: 'harbor仓库地址')
+    string(name: 'DOCKER_IMAGE', defaultValue: 'library/jenkins_demo_sit', description: 'docker镜像名')
+    string(name: 'APP_NAME', defaultValue: 'jenkinsdemo-sit', description: 'k8s中标签名')
+    string(name: 'K8S_NAMESPACE', defaultValue: 'default', description: 'k8s的namespace名称')
+  }
+}
