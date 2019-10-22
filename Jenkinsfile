@@ -62,8 +62,19 @@ pipeline {
         script {
           container('kubectl') {
             sh "sed -e 's#{IMAGE_URL}#" + HARBOR_HOST + "/" + DOCKER_IMAGE + "#g;s#{IMAGE_TAG}#" + GIT_TAG + "#g;s#{APP_NAME}#" + APP_NAME + "#g;s#{SPRING_PROFILE}#k8s-test#g' k8s-deployment.tpl > k8s-deployment.yml"
-            sh "kubectl delete rc " + APP_NAME + " --namespace=" + K8S_NAMESPACE
+			sh "sed -e 's#{APP_NAME}#" + APP_NAME + "#g;s#{NODE_PORT}#" + NODE_PORT + "#g' k8s-deployment-svc.tpl > k8s-deployment-svc.yml"
+            try{
+                sh "kubectl delete rc " + APP_NAME + " --namespace=" + K8S_NAMESPACE	
+            }catch (Exception e) {
+				println e
+			}
+			try{
+                sh "kubectl delete svc " + APP_NAME + " --namespace=" + K8S_NAMESPACE	
+            }catch (Exception e) {
+				println e
+			}
             sh "kubectl apply -f k8s-deployment.yml --namespace=" + K8S_NAMESPACE
+			sh "kubectl apply -f k8s-deployment-svc.yml --namespace=" + K8S_NAMESPACE
           }
         }
 
@@ -112,6 +123,7 @@ pipeline {
     string(name: 'HARBOR_HOST', defaultValue: '192.168.108.131', description: 'harbor仓库地址')
     string(name: 'DOCKER_IMAGE', defaultValue: 'library/jenkins_demo', description: 'docker镜像名')
     string(name: 'APP_NAME', defaultValue: 'jenkinsdemo', description: 'k8s中标签名')
+    string(name: 'NODE_PORT', defaultValue: '30000', description: 'Service端口')
     string(name: 'K8S_NAMESPACE', defaultValue: 'default', description: 'k8s的namespace名称')
   }
 }
