@@ -1,0 +1,81 @@
+pipeline{
+     agent {
+    node {
+      label 'Jenkins_slave_publish'
+    }
+
+  }
+    stages{
+	    stage('Init') {
+			steps{
+				script{
+				
+					println "welcome to Nick learn"
+					println env.WORKSPACE
+					module_test = load env.WORKSPACE + "/groovy/jenkins-module.groovy"
+					sh 'mkdir workplace'
+				}
+			}
+		}
+        stage('source'){
+            steps{
+                script{
+                dir("${env.WORKSPACE}/workplace"){  
+	                    git branch: SOURCE_FROM, credentialsId: '1112',url: 'git@github.com:wenshangbei/jenkins_pipeline_CICD.git'
+	                    git fetch: 'tags',credentialsId: '1112'
+                			sshagent(["11111"]) {
+                				sh """
+                					git config user.email "jenkins@mail.com"
+                					git config user.name "jenkins"
+                					git tag -a -m "${params.GIT_TAG}" ${params.GIT_TAG}
+                					git push origin ${params.GIT_TAG}
+                				"""
+                			}
+                        }
+
+//                 stash(includes: 'workplace/**/*', name: 'workplace')
+                }
+                
+            }
+        }
+        stage('Maven Build') {
+    
+	      steps {
+	        script {
+	       
+	          container('maven') {
+//	          unstash 'workplace'
+		          dir("${env.WORKSPACE}/workplace"){
+		         	 sh 'mvn clean package'
+		          }
+	            
+	          }
+	        }
+	
+	      }
+	    }
+	    stage('Docker Build') {
+	  
+	      steps {
+	        script {
+	          container('docker') {
+	            sh 'docker login -u ' + HARBOR_CREDS_USR  + ' -p ' + HARBOR_CREDS_PSW + ' ' + HARBOR_HOST
+	            sh "docker build  -t " + HARBOR_HOST + "/" + DOCKER_IMAGE + ":" + GIT_TAG + " --no-cache ."
+	            sh "docker push " + HARBOR_HOST + "/" + DOCKER_IMAGE + ":" + GIT_TAG
+	            sh "docker rmi " + HARBOR_HOST + "/" + DOCKER_IMAGE + ":" + GIT_TAG
+	          }
+	        }
+	      }
+	    }
+    }
+
+     environment {
+        HARBOR_CREDS = credentials('aliyun_sz_repo_pwd')
+    }
+    parameters {
+    string(name: 'GIT_TAG', defaultValue: 'default', description: 'tag version')
+    string(name: 'SOURCE_FROM', defaultValue: 'master', description: 'mater')
+    string(name: 'HARBOR_HOST', defaultValue: 'registry.cn-shenzhen.aliyuncs.com', description: 'harbor仓库地址')
+    string(name: 'DOCKER_IMAGE', defaultValue: 'nick_docker_registry/jenkins_demo_sit', description: 'docker镜像名')
+  }
+}
