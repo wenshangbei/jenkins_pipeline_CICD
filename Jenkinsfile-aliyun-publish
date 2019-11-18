@@ -21,8 +21,8 @@ pipeline{
             steps{
                 script{
                 dir("${env.WORKSPACE}/workplace"){  
-	                    git branch: SOURCE_FROM, credentialsId: '1112',url: 'git@github.com:wenshangbei/Jenkins_demo.git'
-//	                    git fetch: 'tags',credentialsId: '1112'
+	                    git branch: SOURCE_FROM, credentialsId: 'aliyun_master',url: 'git@github.com:wenshangbei/Jenkins_demo.git'
+//	                    git fetch: 'tags',credentialsId: 'aliyun_master'
 //               			sshagent(["11111"]) {
 //            				sh """
 //                					git config user.email "jenkins@mail.com"
