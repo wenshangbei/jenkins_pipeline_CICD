@@ -80,24 +80,24 @@ pipeline {
 
             }
         }
-        stage('API Test') {
-            steps {
-                script {
-                    container('newman') {
-                        dir("${env.WORKSPACE}/workplace"){
-                            try{
-                                sleep 5
-                                sh 'newman run postman/jenkins_demo_test.postman_collection.json'
-                            }catch (Exception e) {
-                                println e
-                            }
-
-                        }
-                    }
-                }
-
-            }
-        }
+//        stage('API Test') {
+//            steps {
+//                script {
+//                    container('newman') {
+//                        dir("${env.WORKSPACE}/workplace"){
+//                            try{
+//                                sleep 5
+//                                sh 'newman run postman/jenkins_demo_test.postman_collection.json'
+//                            }catch (Exception e) {
+//                                println e
+//                            }
+//
+//                        }
+//                    }
+//                }
+//
+//            }
+//        }
     }
     post{
         failure {
