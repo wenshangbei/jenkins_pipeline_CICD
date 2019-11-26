@@ -115,7 +115,7 @@ pipeline {
     }
 
     environment {
-        HARBOR_CREDS = credentials('jenkins-harbor-creds')
+        HARBOR_CREDS = credentials('aliyun_sz_repo_pwd')
 //        K8S_CONFIG = credentials('jenkins-k8s-config')
         GIT_TAG = sh(returnStdout: true,script: 'echo ' + BUILD_NUMBER ).trim()
     }
