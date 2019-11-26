@@ -124,6 +124,6 @@ pipeline {
         string(name: 'DOCKER_IMAGE', defaultValue: 'nick_docker_registry/jenkins_demo_dev', description: 'docker镜像名')
         string(name: 'APP_NAME', defaultValue: 'jenkinsdemo', description: 'k8s中标签名')
         string(name: 'NODE_PORT', defaultValue: '30000', description: 'Service端口')
-        string(name: 'K8S_NAMESPACE', defaultValue: 'default', description: 'k8s的namespace名称')
+        string(name: 'K8S_NAMESPACE', defaultValue: 'devops', description: 'k8s的namespace名称')
     }
 }
