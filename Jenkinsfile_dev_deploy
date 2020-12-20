@@ -21,7 +21,7 @@ pipeline {
             steps{
                 script{
                     dir("${env.WORKSPACE}/workplace"){
-                        git branch: 'env/dev', credentialsId: 'aliyun_master',url: 'git@github.com:wenshangbei/Jenkins_demo.git'
+                        git branch: 'env/dev', credentialsId: 'jenkins_nickdevops_ssh',url: 'git@github.com:wenshangbei/Jenkins_demo.git'
                     }
 
 
